@@ -147,14 +147,17 @@ type public SqlCommandProvider(config : TypeProviderConfig) as this =
                 ]
 
             let isStoredProcedure = false
-            let ctorArgsExceptConnection = [
+
+            let commandAlterationFunctor = Expr.Value (None : Option<SqlCommand -> unit>)
+
+            let ctorArgsExceptConnectionAndAlterationFunctor = [
                 Expr.Value sqlStatement; 
                 Expr.Value isStoredProcedure 
                 sqlParameters; 
                 Expr.Value resultType; 
                 Expr.Value rank
                 output.RowMapping; 
-                Expr.Value output.ErasedToRowType.AssemblyQualifiedName
+                Expr.Value output.ErasedToRowType.AssemblyQualifiedName;
             ]
             let ctorImpl = typeof<RuntimeSqlCommand>.GetConstructors() |> Seq.exactlyOne
             ctor1.InvokeCode <- 
@@ -165,7 +168,7 @@ type public SqlCommandProvider(config : TypeProviderConfig) as this =
                             elif isByName then Connection.NameInConfig connectionStringName
                             else Connection.Literal connectionStringOrName
                         @@>
-                    Expr.NewObject(ctorImpl, connArg :: args.[1] :: ctorArgsExceptConnection)
+                    Expr.NewObject(ctorImpl, connArg :: commandAlterationFunctor :: args.[1] :: ctorArgsExceptConnectionAndAlterationFunctor)
            
             cmdProvidedType.AddMember ctor1
 
@@ -176,10 +179,20 @@ type public SqlCommandProvider(config : TypeProviderConfig) as this =
                 ]
 
             ctor2.InvokeCode <- 
-                fun args -> Expr.NewObject(ctorImpl, <@@ Connection.Transaction %%args.[0] @@> :: args.[1] :: ctorArgsExceptConnection)
+                fun args -> Expr.NewObject(ctorImpl, <@@ Connection.Transaction %%args.[0] @@> :: commandAlterationFunctor :: args.[1] :: ctorArgsExceptConnectionAndAlterationFunctor)
 
             cmdProvidedType.AddMember ctor2
+            
+            let ctor3 =
+                ProvidedConstructor [
+                    ProvidedParameter("createCommandFunctor", typeof<unit -> SqlCommand>)
+                    ProvidedParameter("alterCommandFunctor", typeof<Option<SqlCommand -> unit>>, optionalValue = None)
+                ]
+            
+            ctor3.InvokeCode <-
+                fun args -> Expr.NewObject(ctorImpl, <@@ Connection.CreateCommandFunctor %%args.[0] @@> :: <@@ %%args.[1] : Option<SqlCommand -> unit> @@> :: Expr.Value 0 :: ctorArgsExceptConnectionAndAlterationFunctor)
 
+            cmdProvidedType.AddMember ctor3
         do  //AsyncExecute, Execute, and ToTraceString
 
             let executeArgs = DesignTime.GetExecuteArgs(cmdProvidedType, parameters, allParametersOptional, udtts = [])

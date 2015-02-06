@@ -41,14 +41,26 @@ type ResultRank =
 type Connection =
     | Literal of string
     | NameInConfig of string
+    | CreateCommandFunctor of (unit -> SqlCommand)
     | Transaction of SqlTransaction
 
-type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProcedure, parameters, resultType, rank, rowMapping: RowMapping, itemTypeName) = 
+type RuntimeSqlCommand (connection, commandAlterationFunctor, commandTimeout, sqlStatement, isStoredProcedure, parameters, resultType, rank, rowMapping: RowMapping, itemTypeName) = 
 
-    let cmd = new SqlCommand(sqlStatement)
+    // use CreateCommandFunctor's functor to create the instance, otherwise simply new a SqlCommand
+    let cmd = 
+        match connection with
+        | CreateCommandFunctor f -> f()
+        | _ -> new SqlCommand()
+            
     do 
+        cmd.CommandText <- sqlStatement
         cmd.CommandType <- if isStoredProcedure then CommandType.StoredProcedure else CommandType.Text
-        cmd.CommandTimeout <- commandTimeout
+
+        // we don't want the CommandTimeout to be overwritten when using CreateCommandFunctor
+        match connection with
+        | CreateCommandFunctor _ -> ()
+        | _ -> cmd.CommandTimeout <- commandTimeout
+        
     do
         match connection with
         | Literal value -> 
@@ -59,8 +71,9 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
         | Transaction t ->
              cmd.Connection <- t.Connection
              cmd.Transaction <- t
+        | CreateCommandFunctor _ -> ()
     do
-        cmd.Parameters.AddRange( parameters)
+        cmd.Parameters.AddRange(parameters)
 
     let getReaderBehavior() = 
         seq {
@@ -109,14 +122,15 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
     member this.CommandTimeout = cmd.CommandTimeout
 
     member this.AsSqlCommand() = 
-        let clone = new SqlCommand(cmd.CommandText, new SqlConnection(cmd.Connection.ConnectionString), CommandType = cmd.CommandType)
+        let clone = new SqlCommand(cmd.CommandText, new SqlConnection(cmd.Connection.ConnectionString), CommandType = cmd.CommandType, CommandTimeout = cmd.CommandTimeout)
         clone.Parameters.AddRange <| [| for p in cmd.Parameters -> SqlParameter(p.ParameterName, p.SqlDbType) |]
+        RuntimeSqlCommand.AlterWithFunctor(clone, commandAlterationFunctor)
         clone
 
     interface ISqlCommand with
 
-        member this.Execute parameters = execute(cmd, getReaderBehavior, parameters)
-        member this.AsyncExecute parameters = asyncExecute(cmd, getReaderBehavior, parameters)
+        member this.Execute parameters = execute(cmd, getReaderBehavior, parameters, commandAlterationFunctor)
+        member this.AsyncExecute parameters = asyncExecute(cmd, getReaderBehavior, parameters, commandAlterationFunctor)
 
         member this.ToTraceString parameters =  
             let clone = this.AsSqlCommand()
@@ -151,7 +165,15 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
         member this.Dispose() =
             cmd.Dispose()
 
-//Execute/AsyncExecute versions
+    static member internal AlterWithFunctor(cmd, commandAlterationFunctor) =
+        match commandAlterationFunctor with
+        | Some f -> f cmd
+        | None -> ()
+
+    static member internal SetParametersAndPrepare(cmd: SqlCommand, parameters, commandAlterationFunctor) =
+      RuntimeSqlCommand.SetParameters(cmd, parameters)
+      RuntimeSqlCommand.AlterWithFunctor(cmd, commandAlterationFunctor)
+
     static member internal SetParameters(cmd: SqlCommand, parameters: (string * obj)[]) = 
         for name, value in parameters do
             
@@ -177,30 +199,31 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
                 | SqlDbType.VarChar -> p.Size <- 8000
                 | _ -> ()
 
-    static member internal ExecuteReader(cmd, getReaderBehavior, parameters) = 
-        RuntimeSqlCommand.SetParameters(cmd, parameters)
+//Execute/AsyncExecute versions
+    static member internal ExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor) = 
+        RuntimeSqlCommand.SetParametersAndPrepare(cmd, parameters, commandAlterationFunctor)
         cmd.ExecuteReader( getReaderBehavior())
 
-    static member internal AsyncExecuteReader(cmd, getReaderBehavior, parameters) = 
-        RuntimeSqlCommand.SetParameters(cmd, parameters)
+    static member internal AsyncExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor) = 
+        RuntimeSqlCommand.SetParametersAndPrepare(cmd, parameters, commandAlterationFunctor)
         cmd.AsyncExecuteReader( getReaderBehavior())
     
-    static member internal ExecuteDataTable(cmd, getReaderBehavior, parameters) = 
-        use reader = RuntimeSqlCommand.ExecuteReader(cmd, getReaderBehavior, parameters)  
+    static member internal ExecuteDataTable(cmd, getReaderBehavior, parameters, commandAlterationFunctor) = 
+        use reader = RuntimeSqlCommand.ExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor)  
         let result = new FSharp.Data.DataTable<DataRow>()
         result.Load(reader)
         result
 
-    static member internal AsyncExecuteDataTable(cmd, getReaderBehavior, parameters) = 
+    static member internal AsyncExecuteDataTable(cmd, getReaderBehavior, parameters, commandAlterationFunctor) = 
         async {
-            use! reader = RuntimeSqlCommand.AsyncExecuteReader(cmd, getReaderBehavior, parameters) 
+            use! reader = RuntimeSqlCommand.AsyncExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor) 
             let result = new FSharp.Data.DataTable<DataRow>()
             result.Load(reader)
             return result
         }
 
-    static member internal ExecuteSeq<'TItem> (rank, rowMapper) = fun(cmd, getReaderBehavior, parameters) -> 
-        let xs = RuntimeSqlCommand.ExecuteReader(cmd, getReaderBehavior, parameters) |> Seq.ofReader<'TItem> rowMapper
+    static member internal ExecuteSeq<'TItem> (rank, rowMapper) = fun(cmd, getReaderBehavior, parameters, commandAlterationFunctor) -> 
+        let xs = RuntimeSqlCommand.ExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor) |> Seq.ofReader<'TItem> rowMapper
 
         if rank = ResultRank.SingleRow 
         then 
@@ -212,10 +235,10 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
             assert (rank = ResultRank.Sequence)
             box xs 
             
-    static member internal AsyncExecuteSeq<'TItem> (rank, rowMapper) = fun(cmd, getReaderBehavior, parameters) ->
+    static member internal AsyncExecuteSeq<'TItem> (rank, rowMapper) = fun(cmd, getReaderBehavior, parameters, commandAlterationFunctor) ->
         let xs = 
             async {
-                let! reader = RuntimeSqlCommand.AsyncExecuteReader(cmd, getReaderBehavior, parameters)
+                let! reader = RuntimeSqlCommand.AsyncExecuteReader(cmd, getReaderBehavior, parameters, commandAlterationFunctor)
                 return reader |> Seq.ofReader<'TItem> rowMapper
             }
 
@@ -237,13 +260,13 @@ type RuntimeSqlCommand (connection, commandTimeout, sqlStatement, isStoredProced
             assert (rank = ResultRank.Sequence)
             box xs 
 
-    static member internal ExecuteNonQuery(cmd, _, parameters) = 
-        RuntimeSqlCommand.SetParameters(cmd, parameters)  
+    static member internal ExecuteNonQuery(cmd, _, parameters, commandAlterationFunctor) = 
+        RuntimeSqlCommand.SetParametersAndPrepare(cmd, parameters, commandAlterationFunctor)  
         use openedConnection = cmd.Connection.UseLocally()
         cmd.ExecuteNonQuery() 
 
-    static member internal AsyncExecuteNonQuery(cmd, _, parameters) = 
-        RuntimeSqlCommand.SetParameters(cmd, parameters)  
+    static member internal AsyncExecuteNonQuery(cmd, _, parameters, commandAlterationFunctor) = 
+        RuntimeSqlCommand.SetParametersAndPrepare(cmd, parameters, commandAlterationFunctor)  
         async {         
             use openedConnection = cmd.Connection.UseLocally()
             return! cmd.AsyncExecuteNonQuery() 

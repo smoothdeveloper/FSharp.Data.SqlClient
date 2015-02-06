@@ -161,18 +161,20 @@ type public SqlProgrammabilityProvider(config : TypeProviderConfig) as this =
                                 ProvidedParameter("connectionString", typeof<string>, optionalValue = "") 
                                 ProvidedParameter("commandTimeout", typeof<int>, optionalValue = defaultCommandTimeout) 
                             ]
-
+                        
+                        let commandAlterationFunctor = Expr.Value (None : Option<SqlCommand -> unit>)
+                        
                         let ctorArgsExceptConnection = [
-                            Expr.Value commandText                      //sqlStatement
-                            Expr.Value(routine.IsStoredProc)  //isStoredProcedure
-                            sqlParameters                               //parameters
-                            Expr.Value resultType                       //resultType
+                            Expr.Value commandText                 // sqlStatement
+                            Expr.Value(routine.IsStoredProc)       // isStoredProcedure
+                            sqlParameters                          // parameters
+                            Expr.Value resultType                  // resultType
                             Expr.Value (
                                 match routine with 
                                 | ScalarValuedFunction _ ->  
                                     ResultRank.ScalarValue 
-                                | _ -> ResultRank.Sequence)               //rank
-                            output.RowMapping                           //rowMapping
+                                | _ -> ResultRank.Sequence)        // rank
+                            output.RowMapping                      // rowMapping
                             Expr.Value output.ErasedToRowType.AssemblyQualifiedName
                         ]
                         let ctorImpl = typeof<RuntimeSqlCommand>.GetConstructors() |> Seq.exactlyOne
@@ -184,7 +186,7 @@ type public SqlProgrammabilityProvider(config : TypeProviderConfig) as this =
                                         elif isByName then Connection.NameInConfig connectionStringName
                                         else Connection.Literal connectionStringOrName
                                     @@>
-                                Expr.NewObject(ctorImpl, connArg :: args.[1] :: ctorArgsExceptConnection)
+                                Expr.NewObject(ctorImpl, connArg :: commandAlterationFunctor :: args.[1] :: ctorArgsExceptConnection)
 
                         yield (ctor1 :> MemberInfo)
                            
@@ -194,7 +196,7 @@ type public SqlProgrammabilityProvider(config : TypeProviderConfig) as this =
                                 ProvidedParameter("commandTimeout", typeof<int>, optionalValue = defaultCommandTimeout) 
                             ]
                         ctor2.InvokeCode <- 
-                            fun args -> Expr.NewObject(ctorImpl, <@@ Connection.Transaction %%args.[0] @@> :: args.[1] :: ctorArgsExceptConnection)
+                            fun args -> Expr.NewObject(ctorImpl, <@@ Connection.Transaction %%args.[0] @@> :: commandAlterationFunctor :: args.[1] :: ctorArgsExceptConnection)
 
                         yield upcast ctor2
 
