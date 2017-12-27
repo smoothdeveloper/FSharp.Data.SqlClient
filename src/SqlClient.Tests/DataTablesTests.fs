@@ -81,6 +81,13 @@ type DataTablesTests() =
             cmd.Execute() |> ignore
 
     [<Fact>]
+    member __.``can bulk copy with computed column`` () =
+      let t = new AdventureWorks.dbo.Tables.table_with_computed_column ()
+      t.AddRow(timestamp = DateTime.Now)
+      t.BulkCopy()
+
+
+    [<Fact>]
     member __.AddRowAndBulkCopyWithConnOverride() = 
         let t = new ShiftTable()
         use conn = new SqlConnection(connectionString = adventureWorks)

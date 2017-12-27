@@ -69,6 +69,12 @@ IF OBJECT_ID(N'Sales.UnitedKingdomOrders') IS NOT NULL
 	DROP TABLE Sales.UnitedKingdomOrders
 GO
 
+
+IF OBJECT_ID(N'dbo.table_with_computed_column') IS NOT NULL
+	DROP TABLE dbo.table_with_computed_column
+GO
+
+
 -- SYNONYMs
 
 IF OBJECT_ID(N'HumanResources.GetContactInformation') IS NOT NULL
@@ -131,6 +137,13 @@ CREATE TABLE dbo.TableHavingColumnNamesWithSpaces (
     [Modified Date 2] DATETIME     DEFAULT (getdate()) NOT NULL,
 );
 GO
+
+create table dbo.table_with_computed_column (
+	timestamp datetime not null
+	, year as year(timestamp)
+)
+
+insert into dbo.table_with_computed_column (timestamp) values ('2000/01/01')
 
 CREATE TABLE Sales.UnitedKingdomOrders(
 	[SalesOrderID] [int] NOT NULL,
