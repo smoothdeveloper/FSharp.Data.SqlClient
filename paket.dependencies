@@ -1,9 +1,9 @@
 source https://www.nuget.org/api/v2/
 generate_load_scripts: on
 
-github fsprojects/FSharp.TypeProviders.SDK:28a24a69ada68ebd1ad25226634f4608e4875493 src/ProvidedTypes.fs
-github fsprojects/FSharp.TypeProviders.SDK:28a24a69ada68ebd1ad25226634f4608e4875493 src/ProvidedTypes.fsi
-github fsprojects/FSharp.TypeProviders.SDK:28a24a69ada68ebd1ad25226634f4608e4875493 src/ProvidedTypesTesting.fs
+github fsprojects/FSharp.TypeProviders.SDK:579c6474805c99be5a764a9521e3a59fd28e9d7a src/ProvidedTypes.fs
+github fsprojects/FSharp.TypeProviders.SDK:579c6474805c99be5a764a9521e3a59fd28e9d7a src/ProvidedTypes.fsi
+github fsprojects/FSharp.TypeProviders.SDK:579c6474805c99be5a764a9521e3a59fd28e9d7a src/ProvidedTypesTesting.fs
 
 group Build
 	source https://www.nuget.org/api/v2/
@@ -30,7 +30,9 @@ group DesignTime
 	nuget FSharp.Core
 	nuget Microsoft.SqlServer.TransactSql.ScriptDom
 	nuget Microsoft.SqlServer.Types
-	
+	nuget Serilog.Sinks.Console condition: Instrumented
+	nuget Serilog.Sinks.Debug condition: Instrumented
+
 group Test
 	source https://www.nuget.org/api/v2/
 	framework: net461, netcoreapp2.0	

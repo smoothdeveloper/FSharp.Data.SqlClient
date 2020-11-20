@@ -235,12 +235,24 @@ type SqlProgrammabilityProvider(config : TypeProviderConfig) as this =
 
     member internal __.Tables(conn: SqlConnection, schema, connectionString, tagProvidedType) = 
         let tables = ProvidedTypeDefinition("Tables", Some typeof<obj>)
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "getting tables for %s" conn.ConnectionString) 100L <| fun () ->
+        #endif
+
         //tagProvidedType tables
         tables.AddMembersDelayed <| fun() ->
+            #if INSTRUMENTED
+            Instrumentation.Log.scopedMessage (sprintf "getting tables columns for schema (delayed op) %s %s" schema conn.ConnectionString) 10L <| fun () ->
+            #endif
+
             use __ = conn.UseLocally()
             let isSqlAzure = conn.IsSqlAzure
             conn.GetTables(schema, isSqlAzure)
             |> List.map (fun (tableName, baseTableName, baseSchemaName, description) -> 
+
+                #if INSTRUMENTED
+                Instrumentation.Log.scopedMessage (sprintf "getting tables columns for %A %s" (schema,tableName, baseTableName, baseSchemaName) conn.ConnectionString) 10L <| fun () ->
+                #endif
 
                 let descriptionSelector = 
                     if isSqlAzure 

@@ -222,6 +222,9 @@ type SqlConnection with
 
     member internal this.GetRoutines( schema, isSqlAzure) = 
         assert (this.State = ConnectionState.Open)
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "get routines for %s" schema) 1000L <| fun () ->
+        #endif
 
         let descriptionSelector = 
             if isSqlAzure 
@@ -309,7 +312,9 @@ type SqlConnection with
             
     member internal this.GetParameters( routine: Routine, isSqlAzure, useReturnValue) =      
         assert (this.State = ConnectionState.Open)
-
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "params for %A" routine.TwoPartName) 100L <| fun () ->
+        #endif
         let paramDefaults = Task.Factory.StartNew( fun() ->
 
             let parser = Microsoft.SqlServer.TransactSql.ScriptDom.TSql140Parser( true)
@@ -403,6 +408,10 @@ type SqlConnection with
         
     member internal this.GetTables( schema, isSqlAzure) = 
         assert (this.State = ConnectionState.Open)
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "get tables for %s" schema) 1000L <| fun () ->
+        #endif
+
         let descriptionSelector = 
             if isSqlAzure 
             then 
@@ -454,6 +463,10 @@ type SqlConnection with
         ) |> Seq.toList
 
     member internal this.GetFullQualityColumnInfo commandText = 
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "get column info for %s" commandText) 100L <| fun () ->
+        #endif
+
         assert (this.State = ConnectionState.Open)
         use cmd = new SqlCommand("sys.sp_describe_first_result_set", this, CommandType = CommandType.StoredProcedure)
         cmd.Parameters.AddWithValue("@tsql", commandText) |> ignore
@@ -480,6 +493,9 @@ type SqlConnection with
 
     member internal this.FallbackToSETFMONLY(commandText, commandType, parameters: Parameter list) = 
         assert (this.State = ConnectionState.Open)
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "get FallbackToSETFMONLY for %s" commandText) 100L <| fun () ->
+        #endif
         
         use cmd = new SqlCommand(commandText, this, CommandType = commandType)
         for p in parameters do
@@ -508,6 +524,10 @@ type SqlConnection with
             ]
 
     member internal this.LoadDataTypesMap() = 
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "LoadDataTypesMap for %s" this.ConnectionString) 100L <| fun () ->
+        #endif
+
         sqlDataTypesCache.DoIfConnectionStringNotRegistered 
           this.ConnectionString 
           (fun () -> sqlDataTypesCache.GetTypesForConnectionString this.ConnectionString)

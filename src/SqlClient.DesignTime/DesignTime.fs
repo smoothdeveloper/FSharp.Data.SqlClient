@@ -407,9 +407,13 @@ type DesignTime private() =
         )        
 
     static member internal ExtractParameters(connection, commandText: string, allParametersOptional) =  
-        
+
         use cmd = new SqlCommand("sys.sp_describe_undeclared_parameters", connection, CommandType = CommandType.StoredProcedure)
         cmd.Parameters.AddWithValue("@tsql", commandText) |> ignore
+        #if INSTRUMENTED
+        Instrumentation.Log.scopedMessage (sprintf "extracting parameters for %s %s" commandText connection.ConnectionString) 10L <| fun () ->
+        #endif
+        
 
         let parameters = 
             try

@@ -7,4 +7,5 @@ System.Runtime.Caching
 Microsoft.SqlServer.TransactSql.ScriptDom
 Microsoft.SqlServer.Types
 
-
+Serilog.Sinks.Console
+Serilog.Sinks.Debug
