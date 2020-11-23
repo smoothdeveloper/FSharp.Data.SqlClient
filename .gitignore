@@ -3,6 +3,8 @@ packages
 docs/output
 temp
 .vs/
+src/SqlClient/AssemblyInfoInfo.fs
+src/SqlClient.DesignTime/AssemblyInfoInfo.fs
 
 #################
 ## Eclipse
