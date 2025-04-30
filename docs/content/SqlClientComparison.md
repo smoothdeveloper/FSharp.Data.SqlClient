@@ -38,7 +38,7 @@ Here is a typical snippet of SqlCommandProvider-enabled code:
 	open FSharp.Data
 
 	[<Literal>]
-	let connectionString = @"Data Source=(LocalDb)\v11.0;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+	let connectionString = @"Data Source=(LocalDb)\v11.0;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 	[<Literal>]
 	let query = "

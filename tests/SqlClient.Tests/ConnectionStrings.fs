@@ -4,7 +4,7 @@
 let server = @"."
 
 [<Literal>]
-let AdventureWorksLiteral = @"Data Source=" + server + ";Initial Catalog=AdventureWorks2012;Integrated Security=True"
+let AdventureWorksLiteral = @"Data Source=" + server + ";Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 [<Literal>]
 let AdventureWorksDesignOnly = @"name=AdventureWorksDesignOnly"
 [<Literal>]
@@ -14,7 +14,7 @@ let AdventureWorksNamed = @"name=AdventureWorks"
 [<Literal>]
 let MasterDb = @"name=MasterDb"
 [<Literal>]
-let LocalHost = @"Data Source=" + server + ";Integrated Security=True"
+let LocalHost = @"Data Source=" + server + ";Integrated Security=True;TrustServerCertificate=true"
 [<Literal>]
 let AdventureWorksAzureRedGate = @"Data Source=mhknbn2kdz.database.windows.net;Initial Catalog=AdventureWorks2012;User ID=sqlfamily;Pwd=sqlf@m1ly"
 

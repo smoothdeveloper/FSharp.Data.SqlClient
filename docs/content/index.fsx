@@ -1,6 +1,6 @@
 (*** hide ***)
 #r "Microsoft.SqlServer.Types.dll"
-#r @"..\..\bin\net40\FSharp.Data.SqlClient.dll"   
+#r @"..\..\bin\net462\FSharp.Data.SqlClient.dll"   
 
 (**
 Not your grandfather's ORM
@@ -33,7 +33,7 @@ open FSharp.Data
 
 [<Literal>]
 let connectionString = 
-    @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+    @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 (**
 

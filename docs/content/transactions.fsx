@@ -4,7 +4,7 @@
 open FSharp.Data
 
 [<Literal>]
-let connectionString = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+let connectionString = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
     
 (**
 Transactions 

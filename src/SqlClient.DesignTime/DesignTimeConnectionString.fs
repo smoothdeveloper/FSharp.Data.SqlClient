@@ -68,8 +68,7 @@ type internal DesignTimeConnectionString =
                     value
                 else
                     let section = ConfigurationManager.ConnectionStrings.[name]
-                    if section = null 
-                    then raise <| KeyNotFoundException(message = sprintf "Cannot find name %s in <connectionStrings> section of config file." name)
+                    if isNull section then raise <| KeyNotFoundException(message = sprintf "Cannot find name %s in <connectionStrings> section of config file." name)
                     else section.ConnectionString
             @@>
 

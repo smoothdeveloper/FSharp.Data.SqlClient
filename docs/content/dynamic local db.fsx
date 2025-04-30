@@ -19,7 +19,7 @@ open FSharp.Data
 
 [<Literal>]
 let compileConnectionString =
-    @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\git\Project1\Database1.mdf;Integrated Security=True"
+    @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\git\Project1\Database1.mdf;Integrated Security=True;TrustServerCertificate=true"
 
 (**
 However, binary files like this are difficult to diff/merge when working with

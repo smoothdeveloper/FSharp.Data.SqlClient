@@ -416,7 +416,7 @@ type SqlProgrammabilityProvider(config : TypeProviderConfig) as this =
                             Debug.Assert(values.Length = optionalParams.Length, "values.Length = optionalParams.Length")
 
                             for name, value, optional in Array.zip3 namesOfUpdateableColumns values optionalParams do 
-                                row.[name] <- if value = null && optional then box DbNull else value
+                                row.[name] <- if isNull value && optional then box DbNull else value
                             row
                         @@>
 

@@ -40,7 +40,7 @@ Provides statically typed access to the parameters and result set of T-SQL comma
 open FSharp.Data
 
 [<Literal>]
-let connectionString = "Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+let connectionString = "Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 // The query below retrieves top 3 sales representatives from North American region with YTD sales of more than one million.
 

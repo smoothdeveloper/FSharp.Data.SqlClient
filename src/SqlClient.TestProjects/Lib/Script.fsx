@@ -1,4 +1,4 @@
-﻿#r @"..\..\..\bin\net40\FSharp.Data.SqlClient.dll"
+#r @"..\..\..\bin\net462\FSharp.Data.SqlClient.dll"
 #r @"bin\Debug\Lib.dll"
 #r @"System.Configuration"
 #r @"System.Transactions"

@@ -107,7 +107,7 @@ type ``ISqlCommand Implementation``(cfg: DesignTimeConfig, connection: Connectio
                 notImplemented, 
                 notImplemented
             | rowMapping, itemTypeName ->
-                assert (rowMapping <> null && itemTypeName <> null)
+                assert ((not(isNull rowMapping)) && (not (isNull itemTypeName)))
                 let itemType = Type.GetType( itemTypeName, throwOnError = true)
                 
                 let executeHandle = 
@@ -237,10 +237,13 @@ type ``ISqlCommand Implementation``(cfg: DesignTimeConfig, connection: Connectio
                         let sqlDataRecordType = typeof<SqlCommand>.Assembly.GetType("Microsoft.SqlServer.Server.SqlDataRecord", throwOnError = true)
                         let records = typeof<Linq.Enumerable>.GetMethod("Cast").MakeGenericMethod(sqlDataRecordType).Invoke(null, [| value |]) 
                         let hasAny = 
-                            typeof<Linq.Enumerable>
-                                .GetMethods(BindingFlags.Static ||| BindingFlags.Public)
-                                .First(fun m -> m.Name = "Any" && m.GetParameters().Count() = 1)
-                                .MakeGenericMethod(sqlDataRecordType).Invoke(null, [| records |]) :?> bool
+                            let anyMeth = 
+                                typeof<Linq.Enumerable>.GetMethods(BindingFlags.Static ||| BindingFlags.Public)
+                                |> Array.tryFind(fun m -> m.Name = "Any" && m.GetParameters().Length = 1)
+                                
+                            match anyMeth with
+                            | Some x -> x.MakeGenericMethod(sqlDataRecordType).Invoke(null, [| records |]) :?> bool
+                            | None -> false
                         p.Value <- if not hasAny then null else records
                     | _ -> p.Value <- value
                             

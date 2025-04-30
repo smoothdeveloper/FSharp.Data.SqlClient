@@ -37,7 +37,7 @@ A typical implementation for overnight orders shipped since Jan 1, 2008 is follo
 *)
 
 [<Literal>]
-let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 open System 
 open System.Data.SqlClient
@@ -194,7 +194,7 @@ type Roles =
     SqlEnumProvider<"
         SELECT * 
         FROM (VALUES(('Read'), 1), ('Write', 2), ('Admin', 4)) AS T(Name, Value)
-    ", @"Data Source=(LocalDb)\v12.0;Integrated Security=True", Kind = SqlEnumKind.CLI>
+    ", @"Data Source=(LocalDb)\v12.0;Integrated Security=True;TrustServerCertificate=true", Kind = SqlEnumKind.CLI>
 
 type CustomAuthorizeAttribute(roles: Roles) = 
     inherit AuthorizeAttribute()

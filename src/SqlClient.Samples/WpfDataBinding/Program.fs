@@ -1,5 +1,5 @@
 ﻿module FSharp.Data.Application
-
+#nowarn "101"
 //open WebApi
 //let testExternalQuery = new DataAccess.QueryProducts()
 

@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <!-- F# SQL CLIENT STUFF -->
-  <PropertyGroup Condition="$(TargetFramework) == 'net461'">
+  <PropertyGroup Condition="$(TargetFramework) == 'net462'">
     <!-- 
     Microsoft.SqlServer.Types is currently not available for netstandard, 
     USE_SQL_SERVER_TYPES_ASSEMBLY singles out code depending on it
@@ -45,7 +45,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-      <PackageReference Include="System.Data.SqlClient" Version="4.5.1" Condition="'$(TargetFramework)' != 'net40'" />
+      <PackageReference Include="System.Data.SqlClient" Version="4.9.0" Condition="'$(TargetFramework)' != 'net462'" />
   </ItemGroup>
 
 </Project>

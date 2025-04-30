@@ -610,7 +610,7 @@ type DesignTime private() =
                         assert(p.Direction = ParameterDirection.Input)
 
                         let userDefinedTableTypeRow = 
-                            if udttsPerSchema = null
+                            if isNull udttsPerSchema
                             then //SqlCommandProvider case
                                 match cmdProvidedType.GetNestedType(p.TypeInfo.UdttName) with 
                                 | null -> 

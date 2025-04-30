@@ -2,11 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\netfx.props" />
   <PropertyGroup>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <AssemblyName>FSharp.Data.SqlClient.DesignTime</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <NoWarn>$(NoWarn);101</NoWarn>
+    <OutputPath>..\..\bin\typeproviders\fsharp41</OutputPath>
 
     <!--
       note: TypeProvider SDK comes with few warnings
@@ -17,21 +20,20 @@
     <WarningsNotAsErrors>$(WarningsNotAsErrors);FS0026;FS3218;FS3548</WarningsNotAsErrors>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
     <DisableImplicitSystemValueTupleReference>true</DisableImplicitSystemValueTupleReference>
-    <DefineConstants>$(DefineConstants);DESIGNTIME_CODE_ONLY;WITH_LEGACY_NAMESPACE</DefineConstants>
+    <DefineConstants>$(DefineConstants);DESIGNTIME_CODE_ONLY;IS_DESIGNTIME;WITH_LEGACY_NAMESPACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.Core" Version="4.1.18" Condition="'$(TargetFramework)' == 'net40'" />
-    <PackageReference Include="FSharp.Core" Version="4.3.4" Condition="'$(TargetFramework)' == 'net461'" />
-    <!--<PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" Condition="'$(TargetFramework)' == 'net461'" />
-    
+    <!--
+    <PackageReference Include="FSharp.Core" Version="8.0.301" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.4" />
     <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="14.0.3811.1" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="12.0.5000" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" Condition="'$(TargetFramework)' == 'net461'" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" Condition="'$(TargetFramework)' == 'netstandard'" />
-    
+    <PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     -->
+
   </ItemGroup>
-  <!--<ItemGroup Condition="$(TargetFramework) == 'net40'">
+  <!--<ItemGroup Condition="$(TargetFramework) == 'net462'">
     <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
   </ItemGroup>
@@ -42,7 +44,7 @@
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml" />
   </ItemGroup>-->
-  <ItemGroup Condition="$(TargetFramework) == 'net461'">
+  <ItemGroup Condition="$(TargetFramework) == 'net462'">
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
@@ -77,19 +79,6 @@
     <None Include="Scripts\XE.fsx" />
   </ItemGroup>
   <Target Name="CopyAssembliesToTPFolder" AfterTargets="Build">
-    <ItemGroup>
-      <DesignTimeAssemblies Include="$(OutputPath)\FSharp.Data.SqlClient.DesignTime.*" />
-      <DesignTimeAssemblies Include="$(OutputPath)\Microsoft.SqlServer.*.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DesignTimeAssemblies)" DestinationFolder="..\..\bin\typeproviders\fsharp41\$(TargetFramework)" />
   </Target>
-  <Target Name="CopyAssembliesToLegacyFolder" AfterTargets="Build" Condition="$(TargetFramework) == 'net40'">
-    <ItemGroup>
-      <DesignTimeAssemblies Include="$(OutputPath)\FSharp.Data.SqlClient.DesignTime.*" />
-      <DesignTimeAssemblies Include="$(OutputPath)\Microsoft.SqlServer.*.dll" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DesignTimeAssemblies)" DestinationFolder="..\..\bin\$(TargetFramework)" />
-  </Target>
-  
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

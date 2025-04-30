@@ -1,5 +1,5 @@
 (*** hide ***)
-#r @"..\..\bin\net40\FSharp.Data.SqlClient.dll"
+#r @"..\..\bin\net462\FSharp.Data.SqlClient.dll"
 #r "Microsoft.SqlServer.Types.dll"
 (**
 
@@ -46,7 +46,7 @@ CommandText
 open FSharp.Data
 
 [<Literal>]
-let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 //Inline T-SQL text convinient for short queries 
 type GetDate = SqlCommandProvider<"SELECT GETDATE() AS Now", connStr>
@@ -166,7 +166,7 @@ Connection string can be provided either via literal (all examples above) or inl
 
 //Inline 
 type Get42 = 
-    SqlCommandProvider<"SELECT 42", @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True">
+    SqlCommandProvider<"SELECT 42", @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true">
 
 (**
 
@@ -225,7 +225,7 @@ let get42 = new Get42(runTimeConnStr)
 //Factory or IOC of choice to avoid logic duplication. Use F# ctor static constraints.
 module DB = 
     [<Literal>]
-    let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+    let connStr = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
     open System.Data.SqlClient
 
@@ -247,9 +247,9 @@ let dbCmd2: DB.MyCmd2 = DB.createCommand()
 //Static type property ConnectionStringOrName that has exactly same value as passed into SqlCommandProvider helps.
 module DataAccess = 
     [<Literal>]
-    let adventureWorks = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+    let adventureWorks = @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
     [<Literal>]
-    let master = @"Data Source=.;Initial Catalog=master;Integrated Security=True"
+    let master = @"Data Source=.;Initial Catalog=master;Integrated Security=True;TrustServerCertificate=true"
 
     type MyCmd1 = SqlCommandProvider<"SELECT 42", adventureWorks>
     type MyCmd2 = SqlCommandProvider<"SELECT 42", master>

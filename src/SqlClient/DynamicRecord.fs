@@ -10,7 +10,7 @@ type DynamicRecord(data: IDictionary<string, obj>) =
     inherit DynamicObject() 
 
     do
-        assert(data <> null)
+        assert(not (isNull data))
 
     member internal this.Data = data 
 
@@ -42,7 +42,7 @@ type DynamicRecord(data: IDictionary<string, obj>) =
     override this.ToString() =
         [|
             for KeyValue(key, value) in data ->
-                sprintf "%s = %s" key ( if value = null || Convert.IsDBNull( value) then "None" else sprintf "%A" value) 
+                sprintf "%s = %s" key ( if isNull value || Convert.IsDBNull( value) then "None" else sprintf "%A" value) 
         |]
         |> String.concat "; "
         |> sprintf "{ %s }" 

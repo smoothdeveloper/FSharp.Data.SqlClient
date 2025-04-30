@@ -1,12 +1,12 @@
 (*** hide ***)
 #r "Microsoft.SqlServer.Types.dll"
-#r @"..\..\bin\net40\FSharp.Data.SqlClient.dll"   
+#r @"..\..\bin\net462\FSharp.Data.SqlClient.dll"   
 
 open FSharp.Data
 
 [<Literal>]
 let connectionString = 
-    @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True"
+    @"Data Source=.;Initial Catalog=AdventureWorks2012;Integrated Security=True;TrustServerCertificate=true"
 
 type DB = SqlProgrammabilityProvider<connectionString>
 

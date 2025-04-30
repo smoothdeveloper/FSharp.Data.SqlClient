@@ -111,8 +111,7 @@ type SqlCommandProvider(config : TypeProviderConfig) as this =
         
         let schemas =
             sqlDataTypes
-            |> Seq.map (fun i -> i.RetrieveSchemas())
-            |> Seq.concat
+            |> Seq.collect (fun i -> i.RetrieveSchemas())
             |> Seq.distinct
             |> Seq.toArray
         
