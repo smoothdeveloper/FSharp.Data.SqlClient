@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
     <Reference Include="System.Data" />
+    <Reference Include="System.Linq" />
     <Reference Include="System.Transactions" />
   </ItemGroup>
   <ItemGroup>
